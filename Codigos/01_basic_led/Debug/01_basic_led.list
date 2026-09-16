@@ -464,51 +464,52 @@ int main(void) {
  80005ee:	f000 f887 	bl	8000700 <MX_USART2_UART_Init>
 	/* USER CODE BEGIN 2 */
 
-	uint32_t actual_time = 0, last_time = 0, trigger_time = 500;
+	uint32_t actual_time = 0, last_time = 0, trigger_time = 50;
  80005f2:	2300      	movs	r3, #0
  80005f4:	60bb      	str	r3, [r7, #8]
  80005f6:	2300      	movs	r3, #0
  80005f8:	60fb      	str	r3, [r7, #12]
- 80005fa:	f44f 73fa 	mov.w	r3, #500	@ 0x1f4
- 80005fe:	607b      	str	r3, [r7, #4]
+ 80005fa:	2332      	movs	r3, #50	@ 0x32
+ 80005fc:	607b      	str	r3, [r7, #4]
 
 	printf("Hola mundo! :D");
- 8000600:	480e      	ldr	r0, [pc, #56]	@ (800063c <main+0x60>)
- 8000602:	f001 fdc1 	bl	8002188 <iprintf>
+ 80005fe:	480f      	ldr	r0, [pc, #60]	@ (800063c <main+0x60>)
+ 8000600:	f001 fdc2 	bl	8002188 <iprintf>
 	/* Infinite loop */
 	/* USER CODE BEGIN WHILE */
 
 	while (1) {
 		/* USER CODE END WHILE */
 		actual_time = HAL_GetTick(); // Tomamos el contador del sistema
- 8000606:	f000 fafd 	bl	8000c04 <HAL_GetTick>
- 800060a:	60b8      	str	r0, [r7, #8]
+ 8000604:	f000 fafe 	bl	8000c04 <HAL_GetTick>
+ 8000608:	60b8      	str	r0, [r7, #8]
 		if ((actual_time - last_time) >= trigger_time) {
- 800060c:	68ba      	ldr	r2, [r7, #8]
- 800060e:	68fb      	ldr	r3, [r7, #12]
- 8000610:	1ad3      	subs	r3, r2, r3
- 8000612:	687a      	ldr	r2, [r7, #4]
- 8000614:	429a      	cmp	r2, r3
- 8000616:	d8f6      	bhi.n	8000606 <main+0x2a>
+ 800060a:	68ba      	ldr	r2, [r7, #8]
+ 800060c:	68fb      	ldr	r3, [r7, #12]
+ 800060e:	1ad3      	subs	r3, r2, r3
+ 8000610:	687a      	ldr	r2, [r7, #4]
+ 8000612:	429a      	cmp	r2, r3
+ 8000614:	d8f6      	bhi.n	8000604 <main+0x28>
 			last_time = actual_time;
- 8000618:	68bb      	ldr	r3, [r7, #8]
- 800061a:	60fb      	str	r3, [r7, #12]
+ 8000616:	68bb      	ldr	r3, [r7, #8]
+ 8000618:	60fb      	str	r3, [r7, #12]
 			HAL_GPIO_WritePin(GPIOA, System_Led_User_Pin, !HAL_GPIO_ReadPin(GPIOA, System_Led_User_Pin));
- 800061c:	2120      	movs	r1, #32
- 800061e:	4808      	ldr	r0, [pc, #32]	@ (8000640 <main+0x64>)
- 8000620:	f000 fd56 	bl	80010d0 <HAL_GPIO_ReadPin>
- 8000624:	4603      	mov	r3, r0
- 8000626:	2b00      	cmp	r3, #0
- 8000628:	bf0c      	ite	eq
- 800062a:	2301      	moveq	r3, #1
- 800062c:	2300      	movne	r3, #0
- 800062e:	b2db      	uxtb	r3, r3
- 8000630:	461a      	mov	r2, r3
- 8000632:	2120      	movs	r1, #32
- 8000634:	4802      	ldr	r0, [pc, #8]	@ (8000640 <main+0x64>)
- 8000636:	f000 fd63 	bl	8001100 <HAL_GPIO_WritePin>
+ 800061a:	2120      	movs	r1, #32
+ 800061c:	4808      	ldr	r0, [pc, #32]	@ (8000640 <main+0x64>)
+ 800061e:	f000 fd57 	bl	80010d0 <HAL_GPIO_ReadPin>
+ 8000622:	4603      	mov	r3, r0
+ 8000624:	2b00      	cmp	r3, #0
+ 8000626:	bf0c      	ite	eq
+ 8000628:	2301      	moveq	r3, #1
+ 800062a:	2300      	movne	r3, #0
+ 800062c:	b2db      	uxtb	r3, r3
+ 800062e:	461a      	mov	r2, r3
+ 8000630:	2120      	movs	r1, #32
+ 8000632:	4803      	ldr	r0, [pc, #12]	@ (8000640 <main+0x64>)
+ 8000634:	f000 fd64 	bl	8001100 <HAL_GPIO_WritePin>
 		actual_time = HAL_GetTick(); // Tomamos el contador del sistema
- 800063a:	e7e4      	b.n	8000606 <main+0x2a>
+ 8000638:	e7e4      	b.n	8000604 <main+0x28>
+ 800063a:	bf00      	nop
  800063c:	08002e78 	.word	0x08002e78
  8000640:	40020000 	.word	0x40020000
 

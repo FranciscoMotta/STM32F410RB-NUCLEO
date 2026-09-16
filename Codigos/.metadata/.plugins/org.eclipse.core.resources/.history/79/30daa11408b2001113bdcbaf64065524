@@ -90,7 +90,7 @@ int main(void) {
 	MX_USART2_UART_Init();
 	/* USER CODE BEGIN 2 */
 
-	uint32_t actual_time = 0, last_time = 0, trigger_time = 50;
+	uint32_t actual_time = 0, last_time = 0, trigger_time = 500;
 
 	printf("Hola mundo! :D");
 
