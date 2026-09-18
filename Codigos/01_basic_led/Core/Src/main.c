@@ -57,6 +57,19 @@ static void MX_USART2_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+int _write(int fd, char *ptr, int len) {
+	HAL_StatusTypeDef hstatus;
+	if (fd == 1 || fd == 2) {
+		hstatus = HAL_UART_Transmit(&huart2, (uint8_t*) ptr, len, HAL_MAX_DELAY);
+		if (hstatus == HAL_OK) {
+			return len;
+		} else {
+			return -1;
+		}
+	}
+	return -1;
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -90,7 +103,7 @@ int main(void) {
 	MX_USART2_UART_Init();
 	/* USER CODE BEGIN 2 */
 
-	uint32_t actual_time = 0, last_time = 0, trigger_time = 50;
+	uint32_t actual_time = 0, last_time = 0, trigger_time = 100, times_counter = 1;
 
 	printf("Hola mundo! :D");
 
@@ -102,138 +115,146 @@ int main(void) {
 	while (1) {
 		/* USER CODE END WHILE */
 		actual_time = HAL_GetTick(); // Tomamos el contador del sistema
-		if ((actual_time - last_time) >= trigger_time) {
+		if ((actual_time - last_time) >= trigger_time + times_counter) {
 			last_time = actual_time;
+			printf("Led toggled!");
 			HAL_GPIO_WritePin(GPIOA, System_Led_User_Pin, !HAL_GPIO_ReadPin(GPIOA, System_Led_User_Pin));
 		}
-		/* USER CODE BEGIN 3 */
+
+		while (!HAL_GPIO_ReadPin(System_button_User_GPIO_Port, System_button_User_Pin)) {
+			while (HAL_GPIO_ReadPin(System_button_User_GPIO_Port, System_button_User_Pin))
+				;
+			times_counter += 100;
+			if (times_counter > 1000) {
+				times_counter = 100;
+			}
+
+			/* USER CODE BEGIN 3 */
+		}
+		/* USER CODE END 3 */
 	}
-	/* USER CODE END 3 */
-}
 
-/**
- * @brief System Clock Configuration
- * @retval None
- */
-void SystemClock_Config(void) {
-	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
-	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
-
-	/** Configure the main internal regulator output voltage
+	/**
+	 * @brief System Clock Configuration
+	 * @retval None
 	 */
-	__HAL_RCC_PWR_CLK_ENABLE();
-	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+	void SystemClock_Config(void) {
+		RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
+		RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
 
-	/** Initializes the RCC Oscillators according to the specified parameters
-	 * in the RCC_OscInitTypeDef structure.
+		/** Configure the main internal regulator output voltage
+		 */
+		__HAL_RCC_PWR_CLK_ENABLE();
+		__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+		/** Initializes the RCC Oscillators according to the specified parameters
+		 * in the RCC_OscInitTypeDef structure.
+		 */
+		RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+		RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
+		RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+		if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+			Error_Handler();
+		}
+
+		/** Initializes the CPU, AHB and APB buses clocks
+		 */
+		RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+		RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
+		RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+		RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+		RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+		if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK) {
+			Error_Handler();
+		}
+	}
+
+	/**
+	 * @brief USART2 Initialization Function
+	 * @param None
+	 * @retval None
 	 */
-	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-	RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
-	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
-	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
-		Error_Handler();
+	static void MX_USART2_UART_Init(void) {
+
+		/* USER CODE BEGIN USART2_Init 0 */
+
+		/* USER CODE END USART2_Init 0 */
+
+		/* USER CODE BEGIN USART2_Init 1 */
+
+		/* USER CODE END USART2_Init 1 */
+		huart2.Instance = USART2;
+		huart2.Init.BaudRate = 115200;
+		huart2.Init.WordLength = UART_WORDLENGTH_8B;
+		huart2.Init.StopBits = UART_STOPBITS_1;
+		huart2.Init.Parity = UART_PARITY_NONE;
+		huart2.Init.Mode = UART_MODE_TX_RX;
+		huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+		huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+		if (HAL_UART_Init(&huart2) != HAL_OK) {
+			Error_Handler();
+		}
+		/* USER CODE BEGIN USART2_Init 2 */
+
+		/* USER CODE END USART2_Init 2 */
+
 	}
 
-	/** Initializes the CPU, AHB and APB buses clocks
+	/**
+	 * @brief GPIO Initialization Function
+	 * @param None
+	 * @retval None
 	 */
-	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
-			| RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
-	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+	static void MX_GPIO_Init(void) {
+		GPIO_InitTypeDef GPIO_InitStruct = { 0 };
+		/* USER CODE BEGIN MX_GPIO_Init_1 */
 
-	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK) {
-		Error_Handler();
+		/* USER CODE END MX_GPIO_Init_1 */
+
+		/* GPIO Ports Clock Enable */
+		__HAL_RCC_GPIOC_CLK_ENABLE();
+		__HAL_RCC_GPIOH_CLK_ENABLE();
+		__HAL_RCC_GPIOA_CLK_ENABLE();
+		__HAL_RCC_GPIOB_CLK_ENABLE();
+
+		/*Configure GPIO pin Output Level */
+		HAL_GPIO_WritePin(System_Led_User_GPIO_Port, System_Led_User_Pin, GPIO_PIN_RESET);
+
+		/*Configure GPIO pin : System_button_User_Pin */
+		GPIO_InitStruct.Pin = System_button_User_Pin;
+		GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		HAL_GPIO_Init(System_button_User_GPIO_Port, &GPIO_InitStruct);
+
+		/*Configure GPIO pin : System_Led_User_Pin */
+		GPIO_InitStruct.Pin = System_Led_User_Pin;
+		GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+		GPIO_InitStruct.Pull = GPIO_NOPULL;
+		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+		HAL_GPIO_Init(System_Led_User_GPIO_Port, &GPIO_InitStruct);
+
+		/* USER CODE BEGIN MX_GPIO_Init_2 */
+
+		/* USER CODE END MX_GPIO_Init_2 */
 	}
-}
 
-/**
- * @brief USART2 Initialization Function
- * @param None
- * @retval None
- */
-static void MX_USART2_UART_Init(void) {
+	/* USER CODE BEGIN 4 */
 
-	/* USER CODE BEGIN USART2_Init 0 */
+	/* USER CODE END 4 */
 
-	/* USER CODE END USART2_Init 0 */
-
-	/* USER CODE BEGIN USART2_Init 1 */
-
-	/* USER CODE END USART2_Init 1 */
-	huart2.Instance = USART2;
-	huart2.Init.BaudRate = 115200;
-	huart2.Init.WordLength = UART_WORDLENGTH_8B;
-	huart2.Init.StopBits = UART_STOPBITS_1;
-	huart2.Init.Parity = UART_PARITY_NONE;
-	huart2.Init.Mode = UART_MODE_TX_RX;
-	huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-	if (HAL_UART_Init(&huart2) != HAL_OK) {
-		Error_Handler();
+	/**
+	 * @brief  This function is executed in case of error occurrence.
+	 * @retval None
+	 */
+	void Error_Handler(void) {
+		/* USER CODE BEGIN Error_Handler_Debug */
+		/* User can add his own implementation to report the HAL error return state */
+		__disable_irq();
+		while (1) {
+		}
+		/* USER CODE END Error_Handler_Debug */
 	}
-	/* USER CODE BEGIN USART2_Init 2 */
-
-	/* USER CODE END USART2_Init 2 */
-
-}
-
-/**
- * @brief GPIO Initialization Function
- * @param None
- * @retval None
- */
-static void MX_GPIO_Init(void) {
-	GPIO_InitTypeDef GPIO_InitStruct = { 0 };
-	/* USER CODE BEGIN MX_GPIO_Init_1 */
-
-	/* USER CODE END MX_GPIO_Init_1 */
-
-	/* GPIO Ports Clock Enable */
-	__HAL_RCC_GPIOC_CLK_ENABLE();
-	__HAL_RCC_GPIOH_CLK_ENABLE();
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-	__HAL_RCC_GPIOB_CLK_ENABLE();
-
-	/*Configure GPIO pin Output Level */
-	HAL_GPIO_WritePin(System_Led_User_GPIO_Port, System_Led_User_Pin,
-			GPIO_PIN_RESET);
-
-	/*Configure GPIO pin : System_button_User_Pin */
-	GPIO_InitStruct.Pin = System_button_User_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	HAL_GPIO_Init(System_button_User_GPIO_Port, &GPIO_InitStruct);
-
-	/*Configure GPIO pin : System_Led_User_Pin */
-	GPIO_InitStruct.Pin = System_Led_User_Pin;
-	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-	GPIO_InitStruct.Pull = GPIO_NOPULL;
-	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-	HAL_GPIO_Init(System_Led_User_GPIO_Port, &GPIO_InitStruct);
-
-	/* USER CODE BEGIN MX_GPIO_Init_2 */
-
-	/* USER CODE END MX_GPIO_Init_2 */
-}
-
-/* USER CODE BEGIN 4 */
-
-/* USER CODE END 4 */
-
-/**
- * @brief  This function is executed in case of error occurrence.
- * @retval None
- */
-void Error_Handler(void) {
-	/* USER CODE BEGIN Error_Handler_Debug */
-	/* User can add his own implementation to report the HAL error return state */
-	__disable_irq();
-	while (1) {
-	}
-	/* USER CODE END Error_Handler_Debug */
-}
 #ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
